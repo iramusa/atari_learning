@@ -8,6 +8,7 @@ from keras.models import Model
 from keras.layers import Input, Dense, Convolution2D, Deconvolution2D, MaxPooling2D, UpSampling2D, Merge, LSTM
 # import keras
 from keras.utils.visualize_util import plot
+import numpy as np
 
 import structures
 
@@ -85,11 +86,14 @@ class MultiNetwork(object):
             layer_constructor = layer.get('type')
             pos_args = layer.get(structures.POSITIONAL_ARGS, [])
             key_args = layer.get(structures.KEYWORD_ARGS, {})
-            print('Building: ', layer_constructor, pos_args, key_args)
+            # print('Building: ', layer_constructor, pos_args, key_args)
             x = layer_constructor(*pos_args, **key_args)(x)
 
         branch = Model(input_layer, x, name=name)
-        branch.summary()
+        # branch.summary()
+        test_data = np.zeros([1] + list(input_shape))
+        res = branch.predict(test_data)
+
         if not branch.output_shape[1:] == output_shape:
             raise ValueError('Bad output shape! Expected: {0} Actual: {1}'.format(output_shape, branch.output_shape))
 

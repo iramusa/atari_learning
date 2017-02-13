@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     mn = architecture.MultiNetwork()
 
-    r = mn.autoencoder_gen.predict(x_train)
-    print(r.shape)
-    # mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
+    # r = mn.autoencoder_gen.predict(x_valid[:2,:,:,:])
+    # print(r.shape)
+    mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
 

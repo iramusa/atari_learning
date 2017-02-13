@@ -114,8 +114,106 @@ ENCODER = {
         ],
     }
 
-
 DECODER = {
+        'name': 'deconv4',
+        'input_shape': (V_SIZE,),
+        'output_shape': INPUT_IMAGE_SHAPE,
+        'layers': [
+            {
+                'type': Dense,
+                POSITIONAL_ARGS: [8*11*64],
+                'output_dim': 8*11*64,
+                KEYWORD_ARGS: {
+                    'activation': 'relu',
+                }
+            },
+            {
+                'type': Reshape,
+                POSITIONAL_ARGS: [(11, 8, 64)],
+                'shape': (11, 8, 64),
+            },
+            {
+                'type': UpSampling2D,
+                POSITIONAL_ARGS: [(2, 2)]
+            },
+            {
+                'type': ZeroPadding2D,
+                KEYWORD_ARGS: {
+                    'padding': (1, 1)
+                }
+
+            },
+            {
+                'type': Convolution2D,
+                POSITIONAL_ARGS: [64, 4, 4],
+                KEYWORD_ARGS : {
+                    'activation': 'relu',
+                    'border_mode': 'same'
+                }
+            },
+            {
+                'type': UpSampling2D,
+                POSITIONAL_ARGS: [(2, 2)]
+            },
+            {
+                'type': ZeroPadding2D,
+                KEYWORD_ARGS: {
+                    'padding': (1, 1)
+                }
+
+            },
+            {
+                'type': Convolution2D,
+                POSITIONAL_ARGS: [64, 6, 6],
+                KEYWORD_ARGS: {
+                    'activation': 'relu',
+                    'border_mode': 'same'
+                }
+            },
+            {
+                'type': UpSampling2D,
+                POSITIONAL_ARGS: [(2, 2)]
+            },
+            {
+                'type': ZeroPadding2D,
+                KEYWORD_ARGS: {
+                    'padding': (1, 1)
+                }
+
+            },
+            {
+                'type': Convolution2D,
+                POSITIONAL_ARGS: [64, 6, 6],
+                KEYWORD_ARGS: {
+                    'activation': 'relu',
+                    'border_mode': 'same'
+                }
+            },
+
+            {
+                'type': UpSampling2D,
+                POSITIONAL_ARGS: [(2, 2)]
+            },
+            {
+                'type': ZeroPadding2D,
+                KEYWORD_ARGS: {
+                    'padding': (3, 2)
+                }
+
+            },
+            {
+                'type': Convolution2D,
+                POSITIONAL_ARGS: [3, 8, 8],
+                KEYWORD_ARGS : {
+                    'activation': 'relu',
+                    'border_mode': 'same'
+                }
+            },
+        ],
+    }
+
+
+DECODER_DECONV = {
         'name': 'deconv4',
         'input_shape': (V_SIZE,),
         'output_shape': INPUT_IMAGE_SHAPE,
