@@ -33,9 +33,6 @@ ENCODER = {
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [32, 8, 8],
-                'nbfilter': 32,
-                'nbrow': 8,
-                'nbcol': 8,
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
@@ -52,9 +49,6 @@ ENCODER = {
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 6, 6],
-                'nbfilter': 64,
-                'nbrow': 6,
-                'nbcol': 6,
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
@@ -71,9 +65,6 @@ ENCODER = {
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 6, 6],
-                'nbfilter': 64,
-                'nbrow': 6,
-                'nbcol': 6,
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
@@ -91,13 +82,9 @@ ENCODER = {
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 4, 4],
-                'nbfilter': 64,
-                'nbrow': 4,
-                'nbcol': 4,
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
-                    # 'border_mode': 'same'
                 }
             },
             {
@@ -106,7 +93,6 @@ ENCODER = {
             {
                 'type': Dense,
                 POSITIONAL_ARGS: [V_SIZE],
-                'output_dim': V_SIZE,
                 KEYWORD_ARGS: {
                     'activation': 'relu',
                 }
@@ -211,7 +197,6 @@ DECODER = {
             },
         ],
     }
-
 
 DECODER_DECONV = {
         'name': 'deconv4',
@@ -325,13 +310,11 @@ SCREEN_DISCRIMINATOR = {
                 POSITIONAL_ARGS: [1],
                 'output_dim': 1,
                 KEYWORD_ARGS: {
-                    'activation': 'relu',
+                    'activation': 'sigmoid',
                 }
             },
         ],
     }
-
-
 
 DEFAULT_STRUCTURE = {
     'encoder': ENCODER,
