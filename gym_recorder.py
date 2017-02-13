@@ -20,12 +20,15 @@ import tensorflow as tf
 # GAME = 'DemonAttack'
 # GAME = 'SpaceInvaders'
 # GAME = 'Pong'
-GAME = 'Asteroids'
+# GAME = 'Asteroids'
 # GAME = 'Berzerk'
-# FILENAME = GAME + '-valid'
-FILENAME = GAME + '-train'
+GAME = 'Freeway'
+FILENAME = GAME + '-valid'
+# FILENAME = GAME + '-train'
 IM_BOX = (0, 0, 160, 192)
-ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'z','z','z','z','z', 'n']
+# ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'z','z','z','z','z', 'n']
+# ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
+# ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'n']
 # ACTIONS = ['n']
 
 
@@ -46,10 +49,10 @@ class Agent(object):
         self.env = env
         self.ep = 0
         self.t = 0
-        self.last_move = random.randint(0, len(ACTIONS)-1)
+        self.last_move = random.randint(0, 1)
         self.obs_list = []
         self.rw_list = []
-        filename = os.path.join('new_images/', FILENAME + '.tfrecords')
+        filename = os.path.join('full_images/', FILENAME + '.tfrecords')
         print('Writing', filename)
         self.writer = tf.python_io.TFRecordWriter(filename)
 
@@ -63,7 +66,8 @@ class Agent(object):
             print(cnt)
             # action = env.action_space.sample()
             # teleport button in asteroids
-            action = np.random.randint(0, 5)
+            if cnt % 10 == 0:
+                action = np.random.randint(0, 3)
             # action_n = [self.gen_action()]
             observation, reward, done, info = self.env.step(action)
 
@@ -81,7 +85,7 @@ class Agent(object):
             self.rw_list.append(reward)
 
             # if enough frames to merge
-            if len(self.obs_list) == 2:
+            if len(self.obs_list) == 1:
                 # print(observation_n)
 
                 self.write_record()
@@ -102,7 +106,7 @@ class Agent(object):
 
         return presses
 
-    def write_record(self):
+    def write_record_edges_merged(self):
         processed_ims = []
         for i in range(len(self.obs_list)):
             im = Image.fromarray(self.obs_list[i])
@@ -133,6 +137,22 @@ class Agent(object):
             'image_processed': _bytes_feature(merged.tobytes()),
             'image_raw_0': _bytes_feature(self.obs_list[0].tobytes()),
             'image_raw_1': _bytes_feature(self.obs_list[1].tobytes())}))
+
+        self.writer.write(example.SerializeToString())
+
+    def write_record(self):
+        im = self.obs_list[0]
+
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'height': _int64_feature(84),
+            'width': _int64_feature(84),
+            'depth': _int64_feature(1),
+            'timestep': _int64_feature(self.t),
+            'episode': _int64_feature(self.ep),
+            'reward': _float_feature(np.sum(self.rw_list)),
+            'action': _int64_feature(self.last_move),
+            'image_processed': _bytes_feature(im.tobytes()),
+        }))
 
         self.writer.write(example.SerializeToString())
 
