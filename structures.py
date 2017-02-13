@@ -163,7 +163,6 @@ DECODER = {
                     'subsample': (2, 2),
                     'activation': 'relu',
                     'output_shape': (-1, 50, 38, 64),
-
                     # 'border_mode': 'same'
                 }
             },
@@ -184,14 +183,13 @@ DECODER = {
                     'subsample': (2, 2),
                     'activation': 'relu',
                     'output_shape': (-1, 102, 78, 64),
-
                     # 'border_mode': 'same'
                 }
             },
             {
                 'type': ZeroPadding2D,
                 KEYWORD_ARGS: {
-                    'padding': (1, 0)
+                    'padding': (0, 1)
                 }
 
             },

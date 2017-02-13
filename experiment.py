@@ -25,7 +25,7 @@ def read_and_decode_single_example(filename):
         features={
             'image_processed': tf.FixedLenFeature([], tf.string)
         })
-    image = tf.decode_raw(features['image_raw'], tf.uint8)
+    image = tf.decode_raw(features['image_processed'], tf.uint8)
     image = tf.cast(image, tf.float32) * (1. / 255)
     return image
 
@@ -64,7 +64,6 @@ if __name__ == '__main__':
     IMAGE_FOLDER = 'full_images'
     GAME = 'Freeway'
 
-
     x_train = get_n_images(GAME, train=True, n=1000)
     x_train = np.array(x_train)
     x_train = np.reshape(x_train, (x_train.shape[0], 210, 160, 3))
@@ -79,5 +78,7 @@ if __name__ == '__main__':
 
     mn = architecture.MultiNetwork()
 
-    mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
+    r = mn.autoencoder_gen.predict(x_train)
+    print(r.shape)
+    # mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
 
