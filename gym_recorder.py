@@ -3,14 +3,14 @@
 Records images from a game as well as moves made by the player.
 """
 
-import universe  # register the universe environments
+# import universe  # register the universe environments
 import gym
 import random
 
-from PIL import Image
-from skimage import feature
+# from PIL import Image
+# from skimage import feature
 import numpy as np
-import threading
+# import threading
 import os
 import time
 import tensorflow as tf
@@ -23,8 +23,8 @@ import tensorflow as tf
 # GAME = 'Asteroids'
 # GAME = 'Berzerk'
 GAME = 'Freeway'
-FILENAME = GAME + '-valid'
-# FILENAME = GAME + '-train'
+# FILENAME = GAME + '-valid'
+FILENAME = GAME + '-train'
 IM_BOX = (0, 0, 160, 192)
 # ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'z','z','z','z','z', 'n']
 # ACTIONS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
