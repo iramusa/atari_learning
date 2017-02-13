@@ -151,7 +151,7 @@ class Agent(object):
             'episode': _int64_feature(self.ep),
             'reward': _float_feature(np.sum(self.rw_list)),
             'action': _int64_feature(self.last_move),
-            'image_processed': _bytes_feature(im.tobytes()),
+            'image_raw': _bytes_feature(im.tobytes()),
         }))
 
         self.writer.write(example.SerializeToString())

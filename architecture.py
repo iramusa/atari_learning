@@ -104,6 +104,7 @@ class MultiNetwork(object):
         screen_disc = self.screen_discriminator(z)
 
         self.autoencoder_gen = Model(input_img, screen_recon)
+        self.autoencoder_gen.compile(optimizer='adam', loss='mse')
         self.autoencoder_gen.summary()
         plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gen'), show_layer_names=True,
              show_shapes=True)

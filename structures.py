@@ -7,7 +7,7 @@ IMAGE_SIZE_X = 160
 IMAGE_SIZE_Y = 210
 IMAGE_CHANNELS = 3
 
-INPUT_IMAGE_SHAPE = (IMAGE_SIZE_X, IMAGE_SIZE_Y, IMAGE_CHANNELS)
+INPUT_IMAGE_SHAPE = (IMAGE_SIZE_Y, IMAGE_SIZE_X, IMAGE_CHANNELS)
 
 V_SIZE = 256
 A_MAP_SIZE = 100
@@ -26,7 +26,7 @@ ENCODER = {
             {
                 'type': ZeroPadding2D,
                 KEYWORD_ARGS: {
-                    'padding': (1, 0)
+                    'padding': (0, 1)
                 }
 
             },
@@ -130,8 +130,8 @@ DECODER = {
             },
             {
                 'type': Reshape,
-                POSITIONAL_ARGS: [(8, 11, 64)],
-                'shape': (8, 11, 64),
+                POSITIONAL_ARGS: [(11, 8, 64)],
+                'shape': (11, 8, 64),
             },
             {
                 'type': Deconvolution2D,
@@ -142,7 +142,7 @@ DECODER = {
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
-                    'output_shape': (-1, 18, 24, 64),
+                    'output_shape': (-1, 24, 18, 64),
                     # 'border_mode': 'same'
                 }
             },
@@ -162,7 +162,7 @@ DECODER = {
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
-                    'output_shape': (-1, 38, 50, 64),
+                    'output_shape': (-1, 50, 38, 64),
 
                     # 'border_mode': 'same'
                 }
@@ -183,7 +183,7 @@ DECODER = {
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
-                    'output_shape': (-1, 78, 102, 64),
+                    'output_shape': (-1, 102, 78, 64),
 
                     # 'border_mode': 'same'
                 }
@@ -191,7 +191,7 @@ DECODER = {
             {
                 'type': ZeroPadding2D,
                 KEYWORD_ARGS: {
-                    'padding': (0, 1)
+                    'padding': (1, 0)
                 }
 
             },
@@ -212,7 +212,7 @@ DECODER = {
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
-                    'output_shape': (-1, 160, 210, 3),
+                    'output_shape': (-1, 210, 160, 3),
                     # 'border_mode': 'same'
                 }
             },
