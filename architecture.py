@@ -5,8 +5,8 @@ Class for large network with multiple branches, cost functions, training stages.
 
 # imports
 from keras.models import Model
-from keras.layers import Input, Dense, Convolution2D, Deconvolution2D, MaxPooling2D, UpSampling2D, Merge, LSTM
-# import keras
+from keras.layers import Input
+from keras.optimizers import Adam, Adadelta, RMSprop
 from keras.utils.visualize_util import plot
 import numpy as np
 
@@ -108,7 +108,7 @@ class MultiNetwork(object):
         screen_disc = self.screen_discriminator(z)
 
         self.autoencoder_gen = Model(input_img, screen_recon)
-        self.autoencoder_gen.compile(optimizer='adam', loss='mse')
+        self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss='mse')
         self.autoencoder_gen.summary()
         plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gen'), show_layer_names=True,
              show_shapes=True)
@@ -159,6 +159,30 @@ class MultiNetwork(object):
         print('shape:', train.shape)
 
         return self.autoencoder_critic.train_on_batch(train, labels)
+
+    def train_ae_gan(self, real_images):
+        batch_size = 64
+        make_trainable(self.encoder, False)
+        self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
+        loss = []
+
+        for i in range(5):
+            indices = np.random.randint(0, real_images.shape[0], size=int(batch_size / 2))
+            labels = np.zeros((batch_size,))
+            labels[:int(batch_size / 2)] = 1
+
+            real = real_images[indices, ...]
+            # generate fake images
+            fake = self.autoencoder_gen.predict(real)
+
+            train = np.concatenate((real, fake))
+
+            loss.append(self.autoencoder_critic.train_on_batch(train, labels))
+
+        make_trainable(self.encoder, True)
+        self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
+
+        return loss
 
     def show_reconstruction(self):
         return self

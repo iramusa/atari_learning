@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.layers import Input, Dense, Convolution2D, Deconvolution2D, MaxPooling2D,\
-    UpSampling2D, Merge, LSTM, Flatten, ZeroPadding2D, Reshape
+    UpSampling2D, Merge, LSTM, Flatten, ZeroPadding2D, Reshape, BatchNormalization
 
 
 IMAGE_SIZE_X = 160
@@ -36,15 +36,23 @@ ENCODER = {
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
+                    'init': 'glorot_normal',
                     # 'border_mode': 'same'
                 }
             },
+
             {
                 'type': ZeroPadding2D,
                 KEYWORD_ARGS: {
                     'padding': (1, 1)
                 }
 
+            },
+            {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
             },
             {
                 'type': Convolution2D,
@@ -52,6 +60,7 @@ ENCODER = {
                 KEYWORD_ARGS : {
                     'subsample': (2, 2),
                     'activation': 'relu',
+                    'init': 'glorot_normal',
                     # 'border_mode': 'same'
                 }
             },
@@ -63,38 +72,51 @@ ENCODER = {
 
             },
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 6, 6],
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
+                    'init': 'glorot_normal',
                     # 'border_mode': 'same'
                 }
             },
-            # {
-            #     'type': MaxPooling2D,
-            #     POSITIONAL_ARGS: [(2, 2)],
-            #     'pool_size': (2, 2),
-            #     KEYWORD_ARGS: {
-            #         'border_mode': 'same'
-            #     }
-            # },
+            {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 4, 4],
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
                     'activation': 'relu',
+                    'init': 'glorot_normal',
                 }
             },
             {
                 'type': Flatten,
             },
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Dense,
                 POSITIONAL_ARGS: [V_SIZE],
                 KEYWORD_ARGS: {
                     'activation': 'relu',
+                    'init': 'uniform',
                 }
             },
         ],
@@ -106,10 +128,17 @@ DECODER = {
         'output_shape': INPUT_IMAGE_SHAPE,
         'layers': [
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Dense,
                 POSITIONAL_ARGS: [8*11*64],
                 'output_dim': 8*11*64,
                 KEYWORD_ARGS: {
+                    'init': 'glorot_normal',
                     'activation': 'relu',
                 }
             },
@@ -130,9 +159,43 @@ DECODER = {
 
             },
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 4, 4],
                 KEYWORD_ARGS : {
+                    'init': 'glorot_normal',
+                    'activation': 'relu',
+                    'border_mode': 'same'
+
+                }
+            },
+            {
+                'type': UpSampling2D,
+                POSITIONAL_ARGS: [(2, 2)]
+            },
+            {
+                'type': ZeroPadding2D,
+                KEYWORD_ARGS: {
+                    'padding': (1, 1)
+                }
+
+            },
+            {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
+                'type': Convolution2D,
+                POSITIONAL_ARGS: [64, 6, 6],
+                KEYWORD_ARGS: {
+                    'init': 'glorot_normal',
                     'activation': 'relu',
                     'border_mode': 'same'
                 }
@@ -149,28 +212,16 @@ DECODER = {
 
             },
             {
-                'type': Convolution2D,
-                POSITIONAL_ARGS: [64, 6, 6],
+                'type': BatchNormalization,
                 KEYWORD_ARGS: {
-                    'activation': 'relu',
-                    'border_mode': 'same'
+                    'mode': 2,
                 }
-            },
-            {
-                'type': UpSampling2D,
-                POSITIONAL_ARGS: [(2, 2)]
-            },
-            {
-                'type': ZeroPadding2D,
-                KEYWORD_ARGS: {
-                    'padding': (1, 1)
-                }
-
             },
             {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [64, 6, 6],
                 KEYWORD_ARGS: {
+                    'init': 'glorot_normal',
                     'activation': 'relu',
                     'border_mode': 'same'
                 }
@@ -188,9 +239,16 @@ DECODER = {
 
             },
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Convolution2D,
                 POSITIONAL_ARGS: [3, 8, 8],
-                KEYWORD_ARGS : {
+                KEYWORD_ARGS: {
+                    'init': 'glorot_normal',
                     'activation': 'relu',
                     'border_mode': 'same'
                 }
@@ -306,10 +364,16 @@ SCREEN_DISCRIMINATOR = {
         'output_shape': (1,),
         'layers': [
             {
+                'type': BatchNormalization,
+                KEYWORD_ARGS: {
+                    'mode': 2,
+                }
+            },
+            {
                 'type': Dense,
                 POSITIONAL_ARGS: [1],
-                'output_dim': 1,
                 KEYWORD_ARGS: {
+                    'init': 'glorot_normal',
                     'activation': 'sigmoid',
                 }
             },
