@@ -141,8 +141,7 @@ DECODER = {
                     'init': 'glorot_normal',
                     'activation': 'relu',
                 }
-            },
-            {
+            },            {
                 'type': Reshape,
                 POSITIONAL_ARGS: [(11, 8, 64)],
                 'shape': (11, 8, 64),
