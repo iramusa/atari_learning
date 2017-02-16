@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 import architecture
 import network_params
-from image_generators import MyImageGenerator
+from image_generators import ImageGenerator
 
 import tensorflow as tf
 
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     file_train = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'train')
     file_valid = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'valid')
 
-    train_gen = MyImageGenerator(file_train, batch_size=32,
-                                 im_shape=network_params.INPUT_IMAGE_SHAPE)
-    valid_gen = MyImageGenerator(file_train, batch_size=32,
-                                 im_shape=network_params.INPUT_IMAGE_SHAPE)
+    train_gen = ImageGenerator(file_train, batch_size=32,
+                               im_shape=network_params.INPUT_IMAGE_SHAPE)
+    valid_gen = ImageGenerator(file_train, batch_size=32,
+                               im_shape=network_params.INPUT_IMAGE_SHAPE)
 
 
 
