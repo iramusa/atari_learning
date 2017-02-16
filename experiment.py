@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 
 
 import architecture
-
+import network_params
+from image_generators import MyImageGenerator
 
 import tensorflow as tf
 
@@ -23,9 +24,9 @@ def read_and_decode_single_example(filename):
     features = tf.parse_single_example(
         serialized_example,
         features={
-            'image_processed': tf.FixedLenFeature([], tf.string)
+            'image_raw': tf.FixedLenFeature([], tf.string)
         })
-    image = tf.decode_raw(features['image_processed'], tf.uint8)
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
     image = tf.cast(image, tf.float32) * (1. / 255)
     return image
 
@@ -57,28 +58,24 @@ def get_n_images(game, train, n=5000):
     return ims
 
 
-# x_valid = get_all_images(GAME, train=False)
-
-
 if __name__ == '__main__':
     IMAGE_FOLDER = 'full_images'
     GAME = 'Freeway'
+    BATCH_SIZE = 32
 
-    x_train = get_n_images(GAME, train=True, n=1000)
-    x_train = np.array(x_train)
-    x_train = np.reshape(x_train, (x_train.shape[0], 210, 160, 3))
+    file_train = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'train')
+    file_valid = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'valid')
 
-    x_valid = get_n_images(GAME, train=True, n=100)
-    x_valid = np.array(x_valid)
-    x_valid = np.reshape(x_valid, (x_valid.shape[0], 210, 160, 3))
+    train_gen = MyImageGenerator(file_train, batch_size=32,
+                                 im_shape=network_params.INPUT_IMAGE_SHAPE)
+    valid_gen = MyImageGenerator(file_train, batch_size=32,
+                                 im_shape=network_params.INPUT_IMAGE_SHAPE)
 
-    # print(X.shape)
-    # plt.imshow(X[0, ...])
-    # plt.show()
 
-    mn = architecture.MultiNetwork()
+
+    # mn = architecture.MultiNetwork()
 
     # r = mn.autoencoder_gen.predict(x_valid[:2,:,:,:])
     # print(r.shape)
-    mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
+    # mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
 
