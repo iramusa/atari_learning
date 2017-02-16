@@ -349,7 +349,7 @@ DECODER_DECONV = {
                 'nbcol': 4,
                 KEYWORD_ARGS: {
                     'subsample': (2, 2),
-                    'activation': 'relu',
+                    'activation': 'linear',
                     'output_shape': (-1, 210, 160, 3),
                     # 'border_mode': 'same'
                 }
