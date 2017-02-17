@@ -6,6 +6,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import time
 from PIL import Image
 # from scipy.misc import imsave
 
@@ -97,9 +98,8 @@ class Experiment(object):
             fpath = '{0}/ae_gen_{1}.hdf5'.format(self.models_folder, epochs_so_far)
             self.network.autoencoder_gen.save_weights(fpath)
 
-    def train_ae_gan(self, epochs=5, model_checkpoint=False):
+    def train_ae_disc(self, epochs=5):
         print('Training discriminator for {0} epochs.'.format(epochs))
-        print('Training generator for {0} epochs.'.format(epochs))
 
         n_batches_train = int(BATCHES_PER_EPOCH/4)
         n_batches_valid = 2
@@ -123,22 +123,11 @@ class Experiment(object):
             validation_losses.append(batch_loss/n_batches_valid)
             print('disc valid losses:', validation_losses)
 
-            if self.network.autoencoder_disc.trainable:
-                architecture.make_trainable(self.network.autoencoder_disc, False)
-                self.network.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
-                # raise ValueError('Discriminator must not be trainable')
-
-            history = self.network.autoencoder_gan.fit_generator(self.train_gen.generate_ae_gan(),
-                                                                 samples_per_epoch=BATCHES_PER_EPOCH * BATCH_SIZE,
-                                                                 nb_epoch=1,
-                                                                 max_q_size=5,
-                                                                 validation_data=self.valid_gen.generate_ae_gan(),
-                                                                 nb_val_samples=4 * BATCH_SIZE)
-
         # self.losses[''] += train_losses
         # self.losses[''] += validation_losses
 
-
+    def train_ae_gan(self, epochs=5, model_checkpoint=False):
+        print('Training generator for {0} epochs.'.format(epochs))
         if self.network.autoencoder_disc.trainable:
             architecture.make_trainable(self.network.autoencoder_disc, False)
             self.network.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
@@ -220,7 +209,10 @@ class Experiment(object):
     def run_experiment(self):
         if self.output_folder == 'pure_gan':
             for i in range(100):
+                self.train_ae_disc(epochs=2)
+                time.sleep(3)
                 self.train_ae_gan(epochs=10)
+                time.sleep(3)
 
         if self.output_folder == 'pure_ae':
             for i in range(100):
@@ -229,13 +221,22 @@ class Experiment(object):
         if self.output_folder == 'ae_gan':
             self.train_ae(epochs=60)
             for i in range(50):
-                self.train_ae_gan(epochs=10)
-                self.train_ae(epochs=10)
+                time.sleep(3)
+                self.train_ae_disc(epochs=2)
+                time.sleep(3)
+                self.train_ae_gan(epochs=5)
+                time.sleep(3)
+                self.train_ae(epochs=5)
 
         if self.output_folder == 'ae_gan_mix':
+            self.train_ae(epochs=4)
             for i in range(250):
-                self.train_ae(epochs=2)
-                self.train_ae_gan(epochs=2)
+                time.sleep(3)
+                self.train_ae_disc(epochs=2)
+                time.sleep(3)
+                self.train_ae_gan(epochs=4)
+                time.sleep(3)
+                self.train_ae(epochs=4)
 
         self.finish()
 
