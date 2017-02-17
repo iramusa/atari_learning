@@ -1,14 +1,6 @@
+#!/usr/bin/env python3
+
 # %% imports
-import tensorflow as tf
-from keras.layers import Input, Dense, Convolution2D, Deconvolution2D, MaxPooling2D, UpSampling2D
-from keras.models import Model
-from keras import regularizers
-from keras import backend as K
-import keras
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 import architecture
 import network_params
 from image_generators import ImageGenerator
@@ -57,6 +49,8 @@ def get_n_images(game, train, n=5000):
 
     return ims
 
+# for testing
+# with tf.device("/cpu:0"):
 
 if __name__ == '__main__':
     IMAGE_FOLDER = 'full_images'
@@ -64,18 +58,24 @@ if __name__ == '__main__':
     BATCH_SIZE = 32
 
     file_train = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'train')
-    file_valid = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'valid')
+    # file_valid = "{0}/{1}-{2}.tfrecords".format(IMAGE_FOLDER, GAME, 'valid')
 
     train_gen = ImageGenerator(file_train, batch_size=32,
-                               im_shape=network_params.INPUT_IMAGE_SHAPE)
-    valid_gen = ImageGenerator(file_train, batch_size=32,
-                               im_shape=network_params.INPUT_IMAGE_SHAPE)
+                               im_shape=network_params.INPUT_IMAGE_SHAPE,
+                               buffer_size=BATCH_SIZE*200)
+    # valid_gen = ImageGenerator(file_train, batch_size=32,
+    #                            im_shape=network_params.INPUT_IMAGE_SHAPE,
+    #                            buffer_size=160)
 
+    mn = architecture.MultiNetwork()
 
-
-    # mn = architecture.MultiNetwork()
-
-    # r = mn.autoencoder_gen.predict(x_valid[:2,:,:,:])
-    # print(r.shape)
-    # mn.autoencoder_gen.fit(x_train, x_train, nb_epoch=15, batch_size=32, shuffle=True, validation_data=(x_valid, x_valid))
+    # mn.autoencoder_gen.tra
+    # with tf.device(" / cpu: 0")
+    mn.autoencoder_gen.fit_generator(train_gen.generate_ae(),
+                                     samples_per_epoch=30*BATCH_SIZE,
+                                     nb_epoch=30,
+                                     max_q_size=1,
+                                     verbose=2)
+                                     # validation_data=valid_gen.generate_ae(),
+                                     # nb_val_samples=3)
 

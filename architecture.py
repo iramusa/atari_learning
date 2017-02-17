@@ -10,10 +10,11 @@ from keras.optimizers import Adam, Adadelta, RMSprop
 from keras.utils.visualize_util import plot
 import numpy as np
 
-import structures
+import network_params
 
 
 FOLDER_MODELS = 'models'
+
 
 def make_trainable(model, trainable):
     """
@@ -29,7 +30,7 @@ def make_trainable(model, trainable):
 
 class MultiNetwork(object):
     def __init__(self, **kwargs):
-        self.structure = kwargs.get('structure', structures.DEFAULT_STRUCTURE)
+        self.structure = kwargs.get('structure', network_params.DEFAULT_STRUCTURE)
 
         # branches of network
         self.encoder = None
@@ -58,9 +59,9 @@ class MultiNetwork(object):
         self.build_networks()
 
     def build_branches(self):
-        self.encoder = self.build_branch(structures.ENCODER)
-        self.decoder = self.build_branch(structures.DECODER)
-        self.screen_discriminator = self.build_branch(structures.SCREEN_DISCRIMINATOR)
+        self.encoder = self.build_branch(network_params.ENCODER)
+        self.decoder = self.build_branch(network_params.DECODER)
+        self.screen_discriminator = self.build_branch(network_params.SCREEN_DISCRIMINATOR)
 
         # self.physics_predictor = self.build_physics_predictor()
         # self.action_mapper = self.build_action_mapper()
@@ -84,8 +85,8 @@ class MultiNetwork(object):
 
         for layer in layers:
             layer_constructor = layer.get('type')
-            pos_args = layer.get(structures.POSITIONAL_ARGS, [])
-            key_args = layer.get(structures.KEYWORD_ARGS, {})
+            pos_args = layer.get(network_params.POSITIONAL_ARGS, [])
+            key_args = layer.get(network_params.KEYWORD_ARGS, {})
             # print('Building: ', layer_constructor, pos_args, key_args)
             x = layer_constructor(*pos_args, **key_args)(x)
 
@@ -102,20 +103,20 @@ class MultiNetwork(object):
         return branch
 
     def build_autoencoder(self):
-        input_img = Input(shape=structures.INPUT_IMAGE_SHAPE)
+        input_img = Input(shape=network_params.INPUT_IMAGE_SHAPE)
         z = self.encoder(input_img)
         screen_recon = self.decoder(z)
         screen_disc = self.screen_discriminator(z)
 
         self.autoencoder_gen = Model(input_img, screen_recon)
         self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss='mse')
-        self.autoencoder_gen.summary()
+        # self.autoencoder_gen.summary()
         plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gen'), show_layer_names=True,
              show_shapes=True)
 
         self.autoencoder_critic = Model(input_img, screen_disc)
         self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
-        self.autoencoder_critic.summary()
+        # self.autoencoder_critic.summary()
         plot(self.autoencoder_critic, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_critic'), show_layer_names=True,
              show_shapes=True)
 
@@ -125,7 +126,7 @@ class MultiNetwork(object):
         screen_disc = self.screen_discriminator(z)
 
         self.autoencoder_gan = Model(input_img, screen_disc)
-        self.autoencoder_gan.summary()
+        # self.autoencoder_gan.summary()
         plot(self.autoencoder_gan, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gan'),
              show_layer_names=True,
              show_shapes=True)
