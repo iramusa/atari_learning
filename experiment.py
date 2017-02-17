@@ -7,7 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 from PIL import Image
-
+# from scipy.misc import imsave
 
 import architecture
 import network_params
@@ -18,17 +18,29 @@ RECONSTRUCTIONS_FOLDER = 'reconstructions'
 PLOTS_FOLDER = 'plots'
 MODELS_FOLDER = 'models'
 LOG_FILE = 'log.log'
+ERR_FILE = 'err.log'
 
 GAME = 'Freeway'
 BATCH_SIZE = 32
+BATCHES_PER_EPOCH = 100
 
 
 class Experiment(object):
     def __init__(self, output_folder='generic_exp', description='', epochs=200, **kwargs):
+        self.output_folder = output_folder
+        self.reconstructions_folder = '{0}/{1}'.format(self.output_folder, RECONSTRUCTIONS_FOLDER)
+        self.plots_folder = '{0}/{1}'.format(self.output_folder, PLOTS_FOLDER)
+        self.models_folder = '{0}/{1}'.format(self.output_folder, MODELS_FOLDER)
+
+        self.make_directories()
+
         # divert prints to log file, print line by line so the file can be read real time
-        self.log_file = open('{0}/{1}'.format(self.output_folder, LOG_FILE), 'a', buffering=1)
+        self.log_file = open('{0}/{1}'.format(self.output_folder, LOG_FILE), 'w', buffering=1)
+        self.err_file = open('{0}/{1}'.format(self.output_folder, ERR_FILE), 'w', buffering=1)
         self.stdout = sys.stdout  # copy just in case
+        self.stderr = sys.stderr  # copy just in case
         sys.stdout = self.log_file
+        sys.stderr = self.log_file
 
         self.name = kwargs.get('name', 'noname')
         self.game = kwargs.get('game', GAME)
@@ -38,13 +50,6 @@ class Experiment(object):
                                                                                                     self.output_folder,
                                                                                                     self.game,
                                                                                                     self.description))
-
-        self.output_folder = output_folder
-        self.reconstructions_folder = '{0}/{1}'.format(self.output_folder, RECONSTRUCTIONS_FOLDER)
-        self.plots_folder = '{0}/{1}'.format(self.output_folder, PLOTS_FOLDER)
-        self.models_folder = '{0}/{1}'.format(self.output_folder, MODELS_FOLDER)
-
-        self.make_directories()
 
         file_train = "{0}/{1}-{2}.tfrecords".format(DATA_FOLDER, GAME, 'train')
         file_valid = "{0}/{1}-{2}.tfrecords".format(DATA_FOLDER, GAME, 'valid')
@@ -65,23 +70,23 @@ class Experiment(object):
 
         self.losses = {'ae_train': [],
                        'ae_valid': [],
-                       'ae_disc_train': [],
-                       'ae_disc_valid': [],
-                       'ae_gan_train': [],
-                       'ae_gan_valid': [],
+                       # 'ae_disc_train': [],
+                       # 'ae_disc_valid': [],
+                       # 'ae_gan_train': [],
+                       # 'ae_gan_valid': [],
                        }
 
     def train_ae(self, epochs=5, model_checkpoint=False):
         print('Training autoencoder for {0} epochs.'.format(epochs))
         history = self.network.autoencoder_gen.fit_generator(self.train_gen.generate_ae(),
-                                                             samples_per_epoch=1 * BATCH_SIZE,
+                                                             samples_per_epoch=BATCHES_PER_EPOCH * BATCH_SIZE,
                                                              nb_epoch=epochs,
                                                              max_q_size=5,
                                                              validation_data=self.valid_gen.generate_ae(),
                                                              nb_val_samples=4 * BATCH_SIZE)
 
-        self.losses['ae_train'] += history.h['loss']
-        self.losses['ae_valid'] += history.h['val_loss']
+        self.losses['ae_train'] += history.history['loss']
+        self.losses['ae_valid'] += history.history['val_loss']
 
         self.save_losses()
         self.save_ae_recons()
@@ -102,13 +107,20 @@ class Experiment(object):
         for i in range(N_SAMPLES):
             pairs.append(np.concatenate([im_valid[i, ...] + im_med, im_recon[i, ...] + im_med], axis=1))
 
+        tiled = np.concatenate(pairs, axis=0)
+
+        # return to viewable representation
+        tiled *= 255
+        tiled = tiled.astype('uint8')
+
         epochs_so_far = len(self.losses['ae_train'])
-        tiled = np.concatenate(pairs, axis=2)
-        tiled = Image.fromarray(tiled)
         print('Saving new reconstructions after {0} epochs.'.format(epochs_so_far))
+        # imsave('{0}/{1}.png'.format(self.reconstructions_folder, epochs_so_far), tiled)
+        tiled = Image.fromarray(tiled)
         tiled.save('{0}/{1}.png'.format(self.reconstructions_folder, epochs_so_far))
 
     def save_losses(self):
+        # TODO arrays must be the same lengths to use this constructor
         losses = pd.DataFrame.from_dict(self.losses)
         losses.to_csv('{0}/losses.csv'.format(self.output_folder))
 
@@ -117,12 +129,12 @@ class Experiment(object):
 
     def save_models(self):
         print('Saving final models')
-        fpath = '{0}/ae_gen_final.hdf5'.format(self.models_folder)
-        self.network.autoencoder_gen.save_weights(fpath)
-        fpath = '{0}/ae_gan_final.hdf5'.format(self.models_folder)
-        self.network.autoencoder_gan.save_weights(fpath)
-        fpath = '{0}/ae_gen_final.hdf5'.format(self.models_folder)
-        self.network.autoencoder_disc.save_weights(fpath)
+        fpath = '{0}/encoder_final.hdf5'.format(self.models_folder)
+        self.network.encoder.save_weights(fpath)
+        fpath = '{0}/decoder_final.hdf5'.format(self.models_folder)
+        self.network.decoder.save_weights(fpath)
+        fpath = '{0}/screen_discriminator_final.hdf5'.format(self.models_folder)
+        self.network.screen_discriminator.save_weights(fpath)
 
     def finish(self):
         print('Finishing.')
@@ -141,6 +153,7 @@ class Experiment(object):
 
     def run_experiment(self):
         self.train_ae(epochs=5)
+        self.finish()
 
 
 if __name__ == '__main__':
