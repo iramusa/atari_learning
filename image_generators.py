@@ -109,12 +109,20 @@ class ImageGenerator(object):
             images = self.get_shuffled_batch(subtract_median=True)
             yield (images, images)
 
-    def gen_ae(self):
+    def generate_ae_gan(self):
         while True:
-            indices = np.random.randint(0, self.images.shape[0], size=self.batch_size)
-            ims = self.images[indices, ...] * (1.0/255)
-            ims = self.shift_images(ims)
-            yield (ims, ims)
+            images = self.get_shuffled_batch(subtract_median=True)
+            labels = np.ones((images.shape[0],))
+            yield (images, labels)
+
+
+
+    # def gen_ae(self):
+    #     while True:
+    #         indices = np.random.randint(0, self.images.shape[0], size=self.batch_size)
+    #         ims = self.images[indices, ...] * (1.0/255)
+    #         ims = self.shift_images(ims)
+    #         yield (ims, ims)
 
     def shift_images(self, ims):
         ims -= self.im_med
