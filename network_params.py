@@ -1,4 +1,3 @@
-from keras.models import Model
 from keras.layers import Input, Dense, Convolution2D, Deconvolution2D, MaxPooling2D,\
     UpSampling2D, Merge, LSTM, Flatten, ZeroPadding2D, Reshape, BatchNormalization
 
@@ -10,10 +9,6 @@ IMAGE_CHANNELS = 3
 INPUT_IMAGE_SHAPE = (IMAGE_SIZE_Y, IMAGE_SIZE_X, IMAGE_CHANNELS)
 
 V_SIZE = 2048
-A_MAP_SIZE = 100
-S_SIZE = 200
-
-# DENSE_SIZE = 2048
 
 POSITIONAL_ARGS = 'pos_args'
 KEYWORD_ARGS = 'key_args'
@@ -280,4 +275,5 @@ SCREEN_DISCRIMINATOR = {
 DEFAULT_STRUCTURE = {
     'encoder': ENCODER,
     'decoder': DECODER,
+    'screen_discriminator': SCREEN_DISCRIMINATOR
 }

@@ -13,7 +13,7 @@ import numpy as np
 import network_params
 
 
-FOLDER_MODELS = 'models'
+MODELS_FOLDER = 'models'
 
 
 def make_trainable(model, trainable):
@@ -30,6 +30,8 @@ def make_trainable(model, trainable):
 
 class MultiNetwork(object):
     def __init__(self, **kwargs):
+        self.models_folder = kwargs.get('models_folder', MODELS_FOLDER)
+
         self.structure = kwargs.get('structure', network_params.DEFAULT_STRUCTURE)
 
         # branches of network
@@ -45,7 +47,7 @@ class MultiNetwork(object):
 
         # full networks
         self.autoencoder_gen = None
-        self.autoencoder_critic = None
+        self.autoencoder_disc = None
         self.autoencoder_gan = None
 
         self.screen_predictor_g = None
@@ -59,9 +61,9 @@ class MultiNetwork(object):
         self.build_networks()
 
     def build_branches(self):
-        self.encoder = self.build_branch(network_params.ENCODER)
-        self.decoder = self.build_branch(network_params.DECODER)
-        self.screen_discriminator = self.build_branch(network_params.SCREEN_DISCRIMINATOR)
+        self.encoder = self.build_branch(self.structure['encoder'])
+        self.decoder = self.build_branch(self.structure['decoder'])
+        self.screen_discriminator = self.build_branch(self.structure['screen_discriminator'])
 
         # self.physics_predictor = self.build_physics_predictor()
         # self.action_mapper = self.build_action_mapper()
@@ -98,7 +100,7 @@ class MultiNetwork(object):
         if not branch.output_shape[1:] == output_shape:
             raise ValueError('Bad output shape! Expected: {0} Actual: {1}'.format(output_shape, branch.output_shape))
 
-        plot(branch, to_file='{0}/{1}.png'.format(FOLDER_MODELS, name), show_layer_names=True, show_shapes=True)
+        plot(branch, to_file='{0}/{1}.png'.format(self.models_folder, name), show_layer_names=True, show_shapes=True)
 
         return branch
 
@@ -111,13 +113,13 @@ class MultiNetwork(object):
         self.autoencoder_gen = Model(input_img, screen_recon)
         self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss='mse')
         # self.autoencoder_gen.summary()
-        plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gen'), show_layer_names=True,
+        plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(self.models_folder, 'autoencoder_gen'), show_layer_names=True,
              show_shapes=True)
 
-        self.autoencoder_critic = Model(input_img, screen_disc)
-        self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
-        # self.autoencoder_critic.summary()
-        plot(self.autoencoder_critic, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_critic'), show_layer_names=True,
+        self.autoencoder_disc = Model(input_img, screen_disc)
+        self.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
+        # self.autoencoder_disc.summary()
+        plot(self.autoencoder_disc, to_file='{0}/{1}.png'.format(self.models_folder, 'autoencoder_disc'), show_layer_names=True,
              show_shapes=True)
 
         z = self.encoder(input_img)
@@ -127,7 +129,7 @@ class MultiNetwork(object):
 
         self.autoencoder_gan = Model(input_img, screen_disc)
         # self.autoencoder_gan.summary()
-        plot(self.autoencoder_gan, to_file='{0}/{1}.png'.format(FOLDER_MODELS, 'autoencoder_gan'),
+        plot(self.autoencoder_gan, to_file='{0}/{1}.png'.format(self.models_folder, 'autoencoder_gan'),
              show_layer_names=True,
              show_shapes=True)
 
@@ -159,12 +161,12 @@ class MultiNetwork(object):
         train = np.concatenate((real, fake))
         print('shape:', train.shape)
 
-        return self.autoencoder_critic.train_on_batch(train, labels)
+        return self.autoencoder_disc.train_on_batch(train, labels)
 
     def train_ae_gan(self, real_images):
         batch_size = 64
         make_trainable(self.encoder, False)
-        self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
+        self.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
         loss = []
 
         for i in range(5):
@@ -178,10 +180,10 @@ class MultiNetwork(object):
 
             train = np.concatenate((real, fake))
 
-            loss.append(self.autoencoder_critic.train_on_batch(train, labels))
+            loss.append(self.autoencoder_disc.train_on_batch(train, labels))
 
         make_trainable(self.encoder, True)
-        self.autoencoder_critic.compile(optimizer='adam', loss='binary_crossentropy')
+        self.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
 
         return loss
 
