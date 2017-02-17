@@ -1,5 +1,5 @@
-./experiment.py ex_1
-./experiment.py ex_2
-./experiment.py ex_3
-./experiment.py ex_4
-./experiment.py ex_5
+#!/usr/bin/env bash
+./experiment.py ae_gan_mix
+./experiment.py pure_ae
+./experiment.py pure_gan
+./experiment.py ae_gan

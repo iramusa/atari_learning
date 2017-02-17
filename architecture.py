@@ -112,7 +112,6 @@ class MultiNetwork(object):
         input_img = Input(shape=network_params.INPUT_IMAGE_SHAPE)
         z = self.encoder(input_img)
         screen_recon = self.decoder(z)
-        screen_disc = self.screen_discriminator(z)
 
         self.autoencoder_gen = Model(input_img, screen_recon)
         self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss='mse')
@@ -136,7 +135,7 @@ class MultiNetwork(object):
         fakeness = self.autoencoder_disc(screen_recon)
 
         self.autoencoder_gan = Model(input_img, fakeness)
-        self.autoencoder_gen.compile(optimizer='adam', loss='binary_crossentropy')
+        self.autoencoder_gan.compile(optimizer='adam', loss='binary_crossentropy')
         # self.autoencoder_gan.summary()
         plot(self.autoencoder_gan, to_file='{0}/{1}.png'.format(self.models_folder, 'autoencoder_gan'),
              show_layer_names=True,

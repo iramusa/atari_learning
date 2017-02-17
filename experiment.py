@@ -99,20 +99,21 @@ class Experiment(object):
 
     def train_ae_gan(self, epochs=5, model_checkpoint=False):
         print('Training discriminator for {0} epochs.'.format(epochs))
+        print('Training generator for {0} epochs.'.format(epochs))
 
-        n_batches_train = int(BATCHES_PER_EPOCH/2)
+        n_batches_train = int(BATCHES_PER_EPOCH/4)
         n_batches_valid = 2
         train_losses = []
         validation_losses = []
 
-        for i in range(int(epochs/2)):
-            # divided by two because batches are twice as big
+        for i in range(epochs):
             batch_loss = 0
             for j in range(n_batches_train):
                 real_images = self.train_gen.get_shuffled_batch(subtract_median=True)
                 batch_loss += self.network.train_batch_ae_discriminator(real_images)
 
             train_losses.append(batch_loss/n_batches_train)
+            print('disc train losses:', train_losses)
 
             batch_loss = 0
             for j in range(n_batches_valid):
@@ -120,20 +121,29 @@ class Experiment(object):
                 batch_loss += self.network.train_batch_ae_discriminator(real_images, test=True)
 
             validation_losses.append(batch_loss/n_batches_valid)
+            print('disc valid losses:', validation_losses)
 
-        print('train losses:', train_losses)
-        print('valid losses:', validation_losses)
+            if self.network.autoencoder_disc.trainable:
+                architecture.make_trainable(self.network.autoencoder_disc, False)
+                self.network.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
+                # raise ValueError('Discriminator must not be trainable')
+
+            history = self.network.autoencoder_gan.fit_generator(self.train_gen.generate_ae_gan(),
+                                                                 samples_per_epoch=BATCHES_PER_EPOCH * BATCH_SIZE,
+                                                                 nb_epoch=1,
+                                                                 max_q_size=5,
+                                                                 validation_data=self.valid_gen.generate_ae_gan(),
+                                                                 nb_val_samples=4 * BATCH_SIZE)
+
         # self.losses[''] += train_losses
         # self.losses[''] += validation_losses
 
-        print('Training generator for {0} epochs.'.format(epochs))
 
         if self.network.autoencoder_disc.trainable:
             architecture.make_trainable(self.network.autoencoder_disc, False)
             self.network.autoencoder_disc.compile(optimizer='adam', loss='binary_crossentropy')
             # raise ValueError('Discriminator must not be trainable')
 
-        self.network.autoencoder_gan.compile(optimizer='adam', loss='binary_crossentropy')
         history = self.network.autoencoder_gan.fit_generator(self.train_gen.generate_ae_gan(),
                                                              samples_per_epoch=BATCHES_PER_EPOCH * BATCH_SIZE,
                                                              nb_epoch=epochs,
@@ -153,7 +163,7 @@ class Experiment(object):
             fpath = '{0}/ae_gen_{1}.hdf5'.format(self.models_folder, epochs_so_far)
             self.network.autoencoder_gen.save_weights(fpath)
 
-    def save_ae_recons(self, training_type):
+    def save_ae_recons(self, label):
         N_SAMPLES = 5
         im_med = self.train_gen.im_med
         im_valid = self.valid_gen.get_shuffled_batch(subtract_median=True)
@@ -173,7 +183,7 @@ class Experiment(object):
         print('Saving new reconstructions after {0} epochs.'.format(epochs_so_far))
         # imsave('{0}/{1}.png'.format(self.reconstructions_folder, epochs_so_far), tiled)
         tiled = Image.fromarray(tiled)
-        tiled.save('{0}/{1}{2}.png'.format(self.reconstructions_folder, training_type, epochs_so_far))
+        tiled.save('{0}/{1}{2}.png'.format(self.reconstructions_folder, label, epochs_so_far))
 
     def save_losses(self):
         # TODO arrays must be the same lengths to use this constructor
@@ -208,9 +218,25 @@ class Experiment(object):
             os.makedirs(self.plots_folder)
 
     def run_experiment(self):
-        for i in range(10):
-            self.train_ae(epochs=5)
-            self.train_ae_gan(epochs=5)
+        if self.output_folder == 'pure_gan':
+            for i in range(100):
+                self.train_ae_gan(epochs=10)
+
+        if self.output_folder == 'pure_ae':
+            for i in range(100):
+                self.train_ae(epochs=10)
+
+        if self.output_folder == 'ae_gan':
+            self.train_ae(epochs=60)
+            for i in range(50):
+                self.train_ae_gan(epochs=10)
+                self.train_ae(epochs=10)
+
+        if self.output_folder == 'ae_gan_mix':
+            for i in range(250):
+                self.train_ae(epochs=2)
+                self.train_ae_gan(epochs=2)
+
         self.finish()
 
 
