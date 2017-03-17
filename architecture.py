@@ -8,6 +8,7 @@ from keras.models import Model
 from keras.layers import Input
 from keras.optimizers import Adam, Adadelta, RMSprop
 from keras.utils.visualize_util import plot
+import tensorflow as tf
 import numpy as np
 
 import network_params
@@ -26,6 +27,19 @@ def make_trainable(model, trainable):
     model.trainable = trainable
     for l in model.layers:
         l.trainable = trainable
+
+
+def loss_diff(y_true, y_pred):
+    # true gradients
+    grad_true_y = y_true[:-1, :] - y_true[1:, :]
+    grad_true_x = y_true[:, :-1] - y_true[:, 1:]
+    grad_pred_y = y_pred[:-1, :] - y_pred[1:, :]
+    grad_pred_x = y_pred[:, :-1] - y_pred[:, 1:]
+
+    grad_diff = tf.abs(grad_true_x - grad_pred_x) + tf.abs(grad_true_y - grad_pred_y)
+    grad_cost = tf.reduce_sum(grad_diff)
+
+    return grad_cost
 
 
 class MultiNetwork(object):
@@ -114,6 +128,7 @@ class MultiNetwork(object):
         screen_recon = self.decoder(z)
 
         self.autoencoder_gen = Model(input_img, screen_recon)
+        # self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss=loss_diff)
         self.autoencoder_gen.compile(optimizer=Adam(lr=0.0001), loss='mse')
         # self.autoencoder_gen.summary()
         plot(self.autoencoder_gen, to_file='{0}/{1}.png'.format(self.models_folder, 'autoencoder_gen'), show_layer_names=True,
@@ -200,6 +215,7 @@ class MultiNetwork(object):
 
     def show_predictions(self):
         return self
+
 
 if __name__ == '__main__':
     mn = MultiNetwork()
